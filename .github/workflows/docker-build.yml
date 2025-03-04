@@ -19,11 +19,28 @@ jobs:
         uses: actions/setup-node@v3  
         with:  
           node-version: '18'  
-          cache: 'npm'  
+          # 移除缓存配置，或者根据项目实际情况调整  
+          # 如果项目有 package-lock.json，可以保留下面一行：  
+          # cache: 'npm'  
       
       - name: Install dependencies  
-        run: npm ci  
+        # 如果没有 package-lock.json，使用 npm install 而不是 npm ci  
+        run: |  
+          if [ -f "package-lock.json" ]; then  
+            npm ci  
+          else  
+            npm install  
+          fi  
       
+      - name: Run tests  
+        # 仅在 package.json 中定义了 test 脚本时运行测试  
+        run: |  
+          if grep -q "\"test\":" package.json; then  
+            npm test  
+          else  
+            echo "No test script found, skipping tests"  
+          fi  
+        continue-on-error: true  
       
       - name: Set up Docker Buildx  
         uses: docker/setup-buildx-action@v2  
